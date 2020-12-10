@@ -48,9 +48,7 @@ void KeyGen::MakeKeyPair()
 	}
 
 	this->n = p * q;
-	//std::cout << "n: " << n << std::endl;
-	this->fi = (p-1) * (q-1);
-	//std::cout << "fi: " << fi << std::endl;
+	this->fi = (p - 1) * (q - 1);
 
 	bool ch = false;
 	while (!ch)
@@ -59,63 +57,32 @@ void KeyGen::MakeKeyPair()
 		ch = (Gcd(e, fi) == 1);
 	}
 	this->d = BackElement(e, fi);
-
+	/*std::cout << "###################################################################################" << std::endl;
+	std::cout << "###########   My Keys!    #############" << std::endl;
+	std::cout << "p: " << p << std::endl;
+	std::cout << "q: " << q << std::endl;*/
+	//std::cout << "n: " << n << std::endl;
+	//std::cout << "fi: " << fi << std::endl;
 	//std::cout << "e: " << e << std::endl;
 	//std::cout << "d: " << d << std::endl;
 }
 
-cpp_int KeyGen::Encrypt(cpp_int msg = 777)
+cpp_int KeyGen::Encrypt(cpp_int msg)
 {
-
-	cpp_int cp = powmod(msg, e, n);
-	std::cout <<"Encrypt: msg " << msg << std::endl;
-	std::cout << "Encrypt: cp " << cp << std::endl;
-
+	//std::cout << std::hex<< "Encrypt: msg " << msg << std::endl;
+	std::cout << "Encrypting [" << msg << "] ..." << std::endl;
+	cpp_int cp = powmod(msg, e, n); //C = M^e mod n
+	std::cout << std::hex << "Ciphertext: " << cp << std::endl;
 	return cp;
 }
 
-cpp_int KeyGen::Decrypt(cpp_int cp = -1)
+cpp_int KeyGen::Decrypt(cpp_int cp)
 {
-	if(cp == -1)
-		cp = Encrypt();
+	std::cout << "Decrypting:" << cp << std::endl;
+	cpp_int msg = powmod(cp, d, n); //M = C^d mod n
+	std::cout << "Decrypt!\nres = :" << cp << std::endl;
 
-	cpp_int msg = powmod(cp, d, n);
-	std::cout << "Decrypt: cp " << cp << std::endl;
-	std::cout << "Decrypt: msg " << msg << std::endl;
-	
 	return msg;
-}
-
-std::vector<cpp_int> KeyGen::Sign(cpp_int msg)
-{
-	std::cout << "Signing ..." << std::endl;
-	cpp_int s = Encrypt(msg);
-	std::vector<cpp_int> smsg;
-	smsg.push_back(msg);
-	smsg.push_back(s);
-
-	return smsg;
-}
-
-int KeyGen::Verify(std::vector<cpp_int> smsg)
-{
-	std::cout << "Verifying ..." << std::endl;
-	if (smsg[0] == Decrypt(smsg[1]))
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-void KeyGen::SendKey()
-{
-}
-
-void KeyGen::ReceiveKey()
-{
 }
 
 cpp_int KeyGen::Gcd(cpp_int a, cpp_int b, cpp_int& x, cpp_int& y) {
@@ -187,6 +154,7 @@ bool KeyGen::TrialDivision(cpp_int p)
 {
 	if (p % 2 == 0 || p % 3 == 0 || p % 5 == 0)
 	{
+		//std::cout << p << "\tFaild!" << std::endl;
 		return false;
 	}
 	else
@@ -196,6 +164,7 @@ bool KeyGen::TrialDivision(cpp_int p)
 		{
 			if (p % a == 0 || p % b == 0)
 			{
+				//std::cout << p << "\tFaild!" << std::endl;
 				return false;
 			}
 			else
@@ -224,12 +193,10 @@ bool KeyGen::MillerRabin(cpp_int p) // Принимает большое число
 			d /= 2;
 			s++;
 		}
-		//std::cout << d << " " << s << " " << p << std::endl;
 		//Крок 1
 		for (int count = 0; count < k; count++)
 		{
 			x = 2 + gen256() % (p - 2); //Большое случайное х из интервала 2 < x < p-2, независимое от ранее выбраных x
-			//x = GetRandomNumber(1, 1000);
 			if (Gcd(x, p) == 1)
 			{
 				//Крок 2
@@ -252,22 +219,25 @@ bool KeyGen::MillerRabin(cpp_int p) // Принимает большое число
 						}
 						else if (x == 1)
 						{
-							//continue;
+							//std::cout << p << "\tFaild!" << std::endl;
 							return false; // р складене
 						}
 					}
 					if (!check)
 					{
+						//std::cout << p << "\tFaild!" << std::endl;
 						return false; //Якщо за k кроків не було знайденто сильно псевдопросте число, то р є складеним 
 					}
 				}
 			}
 			else
 			{
+				//std::cout << p << "\tFaild!" << std::endl;
 				return false; // р -- складене число
 			}
 		}
 		return true;
 	}
+	//std::cout << p << "\tFaild!" << std::endl;
 	return false;
 }

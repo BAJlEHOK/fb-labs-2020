@@ -12,7 +12,7 @@
 using boost::multiprecision::cpp_int;
 using namespace boost::random;
 typedef independent_bits_engine<mt19937, 1024, cpp_int> generator_type;
-generator_type gen256(static_cast<unsigned int>(std::time(0)));
+generator_type gen(static_cast<unsigned int>(std::time(0)));
 
 class KeyGen
 {

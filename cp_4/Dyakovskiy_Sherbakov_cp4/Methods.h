@@ -12,14 +12,14 @@ cpp_int KeyGen::pow(cpp_int a, cpp_int b)
 	return a * pow(a, b - 1);
 }
 
-void KeyGen::MakeKeyPair(cpp_int bit) //generate num @bit langth. 0 < langth < 1024
+void KeyGen::MakeKeyPair(cpp_int bit) //generate num @bit langth. 0 < length < 1024 Диапазон можно увеличть, увеличив длину генерируемаого числа в Header.h в independent_bits_engine
 {
 	bit = pow(2, bit);
-	cpp_int num = gen256() % (bit + 1);
-	int count = 0;
+	cpp_int num = gen() % (bit + 1);
 	int k = 0;
-	cpp_int p1, q1;
-	while (k < 2)
+	cpp_int p1 = 0, q1 = 0;
+	//Variation 2. No correct work:(
+	/*while (k < 2)
 	{
 		if (MillerRabin(num))
 		{
@@ -41,7 +41,7 @@ void KeyGen::MakeKeyPair(cpp_int bit) //generate num @bit langth. 0 < langth < 1
 			}
 			if (k == 1) 
 			{ 
-				q1 = gen256() % bit;
+				q1 = gen() % (bit + 1);
 				int j = 1;
 				while (true)
 				{
@@ -55,8 +55,56 @@ void KeyGen::MakeKeyPair(cpp_int bit) //generate num @bit langth. 0 < langth < 1
 				break; 
 			}
 		}
-		count++;
-		num = gen256() % (bit + 1);
+		num = gen() % (bit + 1);
+	}*/
+
+	while (k < 2)
+	{
+		if (MillerRabin(num))
+		{
+			if (k == 0)
+			{
+				p1 = num;
+				std::cout << "Candidat p: " << p1 << std::endl;
+				num = gen() % (bit + 1);
+				k++;
+				continue;
+			}
+			if (k == 1)
+			{
+				q1 = num;
+				std::cout << "Candidat q: " << q1 << std::endl;
+				k++;
+				break;
+			}
+		}
+		num = gen() % (bit + 1);
+	}
+
+	int i = 1;
+	while (true)
+	{
+		cpp_int true_p = 2 * i * p1 + 1;
+		if (MillerRabin(true_p))
+		{
+			std::cout << "True p: " << true_p << std::endl;
+			this->p = true_p;
+			break;
+		}
+		i++;
+	}
+
+	int j = 1;
+	while (true)
+	{
+		cpp_int true_q = 2 * j * q1 + 1;
+		if (MillerRabin(true_q))
+		{
+			std::cout << "True q: " << true_q << std::endl;
+			this->q = true_q;
+			break;
+		}
+		j++;
 	}
 
 	this->n = p * q;
@@ -65,7 +113,7 @@ void KeyGen::MakeKeyPair(cpp_int bit) //generate num @bit langth. 0 < langth < 1
 	bool ch = false;
 	while (!ch)
 	{
-		this->e = 2 + gen256() % (fi - 1);
+		this->e = 2 + gen() % (fi - 1);
 		ch = (Gcd(e, fi) == 1);
 	}
 	this->d = BackElement(e, fi);
@@ -219,7 +267,7 @@ bool KeyGen::MillerRabin(cpp_int p) // Принимает большое число
 		//Крок 1
 		for (int count = 0; count < k; count++)
 		{
-			x = 2 + gen256() % (p - 2); //Большое случайное х из интервала 2 < x < p-2, независимое от ранее выбраных x
+			x = 2 + gen() % (p - 2); //Большое случайное х из интервала 2 < x < p-2, независимое от ранее выбраных x
 			if (Gcd(x, p) == 1)
 			{
 				//Крок 2

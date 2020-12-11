@@ -1,9 +1,21 @@
 #pragma once
 #include "Header.h"
 
-void KeyGen::MakeKeyPair()
+cpp_int KeyGen::pow(cpp_int a, cpp_int b)
 {
-	cpp_int num = gen256();
+	if (b == 0) {
+		return 1;
+	}
+	if (b % 2 == 0) {
+		return pow(a * a, b / 2);
+	}
+	return a * pow(a, b - 1);
+}
+
+void KeyGen::MakeKeyPair(cpp_int bit) //generate num @bit langth. 0 < langth < 1024
+{
+	bit = pow(2, bit);
+	cpp_int num = gen256() % (bit + 1);
 	int count = 0;
 	int k = 0;
 	cpp_int p1, q1;
@@ -29,7 +41,7 @@ void KeyGen::MakeKeyPair()
 			}
 			if (k == 1) 
 			{ 
-				q1 = gen256();
+				q1 = gen256() % bit;
 				int j = 1;
 				while (true)
 				{
@@ -44,7 +56,7 @@ void KeyGen::MakeKeyPair()
 			}
 		}
 		count++;
-		num = gen256();
+		num = gen256() % (bit + 1);
 	}
 
 	this->n = p * q;
@@ -70,7 +82,7 @@ void KeyGen::MakeKeyPair()
 cpp_int KeyGen::Encrypt(cpp_int msg)
 {
 	//std::cout << std::hex<< "Encrypt: msg " << msg << std::endl;
-	std::cout << "Encrypting [" << msg << "] ..." << std::endl;
+	std::cout << std::hex << "Encrypting [" << msg << "] ..." << std::endl;
 	cpp_int cp = powmod(msg, e, n); //C = M^e mod n
 	std::cout << std::hex << "Ciphertext: " << cp << std::endl;
 	return cp;
@@ -83,6 +95,31 @@ cpp_int KeyGen::Decrypt(cpp_int cp)
 	std::cout << "Decrypt!\nres = :" << cp << std::endl;
 
 	return msg;
+}
+
+std::pair<cpp_int, cpp_int> KeyGen::Sign(cpp_int msg)
+{
+	std::cout << "Signing ..." << std::endl;
+	cpp_int S = powmod(msg, d, n); // S = k^d mod n
+	std::pair<cpp_int, cpp_int> smsg = make_pair(msg, S);
+	std::cout << "Signing done!" << std::endl;
+
+	return smsg; //(k, S)
+}
+
+bool KeyGen::Verify(cpp_int k, cpp_int S)
+{
+	std::cout << "Verifying ..." << std::endl;
+	if (k == powmod(S, e, n)) //k = S^e mod n
+	{
+		std::cout << "Verifying done!" << std::endl;
+		return true;
+	}
+	else
+	{
+		std::cout << "Verifying false!" << std::endl;
+		return false;
+	}
 }
 
 cpp_int KeyGen::Gcd(cpp_int a, cpp_int b, cpp_int& x, cpp_int& y) {
@@ -115,20 +152,6 @@ cpp_int KeyGen::BackElement(cpp_int a, cpp_int m)
 		if (x < 0) { x += m; }
 		return x;
 	}
-}
-
-cpp_int KeyGen::Eiler(cpp_int n)
-{
-	cpp_int ans;
-	ans = n;
-	for (cpp_int i = 2; i * i <= n; i++)
-		if (n % i == 0) {
-			while (n % i == 0) n /= i;
-			ans -= ans / i;
-		}
-	if (n > 1) ans -= ans / n;
-
-	return ans;
 }
 
 //Возведение в степень по модулю

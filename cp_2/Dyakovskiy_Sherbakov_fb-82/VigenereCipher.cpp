@@ -216,10 +216,31 @@ void blah(char *text, char *key, int size_text, int size_key)
 	cout << "index conformity = " << index << endl;
 }
 
-void get_key_len(int *text)
+int get_key_len(int *text, int accuracy = 30)
 {
+	int r = 0;
+	float max_index = 0.0;
+	for (int i = 1; i < accuracy; i++)
+	{
+		float tmp = index_conformity(text, 8057, i);
+		if (tmp > max_index)
+		{
+			r = i;
+			max_index = tmp;
+		}
+	}
+
+	while (true)
+	{
+		if (r % 2 != 0)
+			break;
+		r /= 2;
+	}
+
+	return r;
+
 	/*
-	for (int i = 1; i < 30; i++)
+	for (int i = 1; i < accuracy; i++)
 	{
 		cout <<"r = " << i << " : index conf = " << index_conformity(text, 8057, i) << endl;
 	}*/
@@ -233,11 +254,11 @@ void get_key_len(int *text)
 	
 }
 
-vector<int> get_key(int* text)
+vector<int> get_key(int* text, int text_size)
 {
-	int size = 8057;
+	int key_size = get_key_len(text, 30);
 	vector<int> key;
-	for (int i = 0; i < 13; i++)
+	for (int i = 0; i < key_size; i++)
 	{
 		map <int, int> alpha_tmp= {
 		{0, 0}, {1,0}, {2,0}, {3, 0}, {4, 0},
@@ -248,7 +269,7 @@ vector<int> get_key(int* text)
 		{25, 0}, {26,0}, {27,0}, {28, 0}, {29, 0},
 		{30, 0}, {31,0}};
 
-		for (int j = i; j < size; j+=13)
+		for (int j = i; j < text_size; j+= key_size)
 		{
 			alpha_tmp[text[j]]++;
 		}
@@ -261,7 +282,7 @@ vector<int> get_key(int* text)
 		map<int, int>::reverse_iterator it = reverseSortMap.rbegin();
 
 		//cout << "Letter " << i << ": " << refunc((it->second - 0) % 32) << endl;
-		key.push_back((it->second - 14) % 32);
+		key.push_back((it->second - 14) % 32); //14 -- index of rus "o"
 	}
 	return key;
 }
@@ -354,15 +375,14 @@ int main()
 	//float index = index_conformity(num_lab, 8057);
 	//cout << "index conformity = " << index << endl;
 	
-	//get_key_len(num_lab);
-	vector<int> key = get_key(num_lab);
+	vector<int> key = get_key(num_lab, 8057);
 	key[4] += 14 % 32;
 	key[6] += 14 % 32;
 	key[8] += 9 % 32;
 	key[10] += 9 % 32;
 
 	cout << "Key: ";
-	for (int k = 0; k < 13; k++)
+	for (int k = 0; k < key.size(); k++)
 	{
 		cout << refunc(key[k]);
 	}
